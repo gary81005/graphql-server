@@ -1,0 +1,63 @@
+# A library has a branch and books
+type Library {
+  branch: String!
+  books: [Book!]
+}
+
+# A book has a title and author
+type Book {
+  title: String!
+  author: Author!
+}
+
+# An author has a name
+type Author {
+  name: String! # Can't return null
+  books: [String!]! # This list can't be null AND its list *items* can't be null
+}
+
+scalar Date
+
+union SearchResult = Book | Author
+
+type Event {
+  id: ID!
+  date: Date!
+}
+
+type User {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+  password: String!
+}
+
+input CreateUserInput {
+  firstName: String!
+  lastName: String!
+  email: String!
+  password: String!
+}
+
+type AddBookMutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  book: Book
+}
+
+type Mutation {
+  registerUser(input: CreateUserInput!): User!
+  addBook(title: String, author: String): AddBookMutationResponse
+}
+# Queries can fetch a list of libraries
+
+type Query {
+  users: [User!]!
+  books: [Book]
+  authors: [Author]
+  search(contains: String): [SearchResult!]
+  events: [Event!]
+  libraries: [Library]
+}
