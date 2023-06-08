@@ -1,16 +1,27 @@
 import { readFileSync } from 'fs';
+import mongoose from 'mongoose';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import resolvers from './resolvers/index.js';
-import { users, books, authors, events } from './datasource.js';
+import { BooksDataSource } from './datasource.js';
 
-// dataSources: {
-//   // booksAPI: books;
-//   // usersAPI: users;
-//   // authorsAPI: authors;
-//   // eventsAPI: events;
-// };
-export interface ApolloContext {}
+export interface ApolloContext {
+  dataSources: {
+    booksAPI: BooksDataSource;
+  };
+}
+
+const MONGO_URI = 'mongodb://localhost:27017/user-register';
+
+// Database connection
+mongoose
+  .connect(MONGO_URI)
+  .then(() => {
+    console.log(`Db Connected`);
+  })
+  .catch((err) => {
+    console.log(err.message);
+  });
 
 const typeDefs = readFileSync('./schema.graphql', { encoding: 'utf-8' });
 // The ApolloServer constructor requires two parameters: your schema
@@ -25,7 +36,16 @@ const server = new ApolloServer<ApolloContext>({
 //  2. installs your ApolloServer instance as middleware
 //  3. prepares your app to handle incoming requests
 const { url } = await startStandaloneServer(server, {
-  listen: { port: 4000 },
+  context: async () => {
+    return {
+      // We are using a static data set for this example, but normally
+      // this would be where you'd add your data source connections
+      // or your REST API classes.
+      dataSources: {
+        booksAPI: new BooksDataSource(),
+      },
+    };
+  },
 });
 
 console.log(`🚀  Server ready at: ${url}`);

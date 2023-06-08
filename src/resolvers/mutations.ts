@@ -1,39 +1,59 @@
 import { Book, CreateUserInput, MutationResolvers } from '../types/types';
-import { users, books } from '../datasource.js';
+import { users, books, User } from '../datasource.js';
 
-const createUser: MutationResolvers['registerUser'] = (parent, args) => {
+const registerUser: MutationResolvers['registerUser'] = async (parent, args) => {
   const { email, firstName, lastName, password }: CreateUserInput = args.input;
 
   const user = {
     email,
     firstName,
-    id: `${users.length + 1}`,
     lastName,
     password,
   };
 
-  users.push(user);
+  const newUser = new User(user);
+  await newUser.save();
 
-  return user;
+  // users.push(user);
+
+  return newUser;
 };
 
-const createBook = (parent, args) => {
-  const { title, author } = args;
-  const newBook: Book = { title, author: { name: author, books: [title] } };
-  books.push(newBook);
-  return {
-    code: '200',
-    success: true,
-    message: 'New book added!',
-    book: newBook,
+const deleteUser: MutationResolvers['deleteUser'] = async (parent, args) => {
+  const { id } = args;
+  const result = await User.findByIdAndDelete(id);
+
+  if (!result) {
+    throw new Error(`Student with ID ${id} not found`);
+  }
+  return result;
+};
+
+const updateUser: MutationResolvers['updateUser'] = async (parent, args) => {
+  const { id, input } = args;
+  const { email, firstName, lastName, password }: CreateUserInput = input;
+
+  const user = {
+    email,
+    firstName,
+    lastName,
+    password,
   };
+
+  const result = await User.findByIdAndUpdate(id, user);
+
+  return result;
 };
 
 // Use the generated `MutationResolvers` type to type check our mutations!
-const mutations = {
+const mutations: MutationResolvers = {
   Mutation: {
-    registerUser: createUser,
-    addBook: createBook,
+    registerUser,
+    deleteUser,
+    updateUser,
+    addBook: async (_, { title, author }, { dataSources }) => {
+      return await dataSources.booksAPI.addBook({ title, author });
+    },
   },
 };
 

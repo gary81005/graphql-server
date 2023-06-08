@@ -26,11 +26,11 @@ type Event {
 }
 
 type User {
-  id: ID!
-  firstName: String!
-  lastName: String!
-  email: String!
-  password: String!
+  id: ID
+  firstName: String
+  lastName: String
+  email: String
+  password: String
 }
 
 input CreateUserInput {
@@ -48,13 +48,16 @@ type AddBookMutationResponse {
 }
 
 type Mutation {
-  registerUser(input: CreateUserInput!): User!
+  deleteUser(id: ID): User
+  updateUser(id: ID, input: CreateUserInput!): User
+  registerUser(input: CreateUserInput!): User
   addBook(title: String, author: String): AddBookMutationResponse
 }
 # Queries can fetch a list of libraries
 
 type Query {
-  users: [User!]!
+  users(page: Int, limit: Int): [User!]!
+  user(id: ID): User
   books: [Book]
   authors: [Author]
   search(contains: String): [SearchResult!]

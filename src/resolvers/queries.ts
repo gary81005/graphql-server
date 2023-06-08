@@ -1,13 +1,17 @@
 import { QueryResolvers } from '../types/types';
-import { users, books, authors, events } from '../datasource.js';
+import { users, books, authors, events, User } from '../datasource.js';
 // Use the generated `QueryResolvers` type to type check our queries!
 
-const findAllUsers: QueryResolvers['users'] = () => {
-  return users;
+const findAllUsers: QueryResolvers['users'] = async (parent, { page = 1, limit = 5 }) => {
+  const skip = (page - 1) * limit;
+  const res = await User.find({}).skip(skip).limit(limit);
+  return res;
 };
-const queries = {
+const findOneUser: QueryResolvers['user'] = async (parent, args) => await User.findById(args.id);
+const queries: QueryResolvers = {
   Query: {
     users: findAllUsers,
+    user: findOneUser,
     search: (parent, args) => {
       const { contains } = args;
       const searchResults = [];
@@ -26,7 +30,9 @@ const queries = {
 
       return searchResults;
     },
-    books: () => books,
+    books: async (_, __, contextValue) => {
+      return await contextValue.dataSources.booksAPI.getBooks();
+    },
     authors: () => authors,
     events: () => events,
   },
